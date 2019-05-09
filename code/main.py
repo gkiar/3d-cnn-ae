@@ -48,7 +48,10 @@ optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-5)
 
 # Perform training
 for epoch in range(num_epochs):
-    for data in training_data:
+    print("Training sample (of {0}: ".format(len(training_data)),
+          end='', flush=True)
+    for idx, data in enumerate(training_data):
+        print(idx + 1, end='', flush=True)
         img = data
         img = img.type('torch.FloatTensor').cpu()
         # forward
