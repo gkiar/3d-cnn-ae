@@ -29,7 +29,7 @@ def gen_3d_sample(c1=10, c2=2, c3=7, size=(48,56,48)):
 # Set epochs, batch size, and N samples
 num_epochs = 5
 batch_size = 16
-training_samples = 500
+training_samples = 1000
 data_shape = (48, 56, 48)
 
 # Generate training data
@@ -48,10 +48,13 @@ optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-5)
 
 # Perform training
 for epoch in range(num_epochs):
-    print("Training sample (of {0}: ".format(len(training_data)),
+    print("Training sample (of {0}): ".format(len(training_data)),
           end='', flush=True)
     for idx, data in enumerate(training_data):
-        print(idx + 1, end='', flush=True)
+        if idx == 0:
+            print(idx+1, end='', flush=True)
+        else:
+            print(", {0}".format(idx + 1), end='', flush=True)
         img = data
         img = img.type('torch.FloatTensor').cpu()
         # forward
@@ -61,6 +64,6 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
+    print('')
     print('epoch [{}/{}], loss:{:.4f}'.format(epoch+1, num_epochs, loss.data))
 
