@@ -4,61 +4,53 @@ import torch
 import torchvision as tv
 import torchvision.transforms as transforms
 import torch.nn as nn
-import torch.nn.functional as F
+import numpy as np
 
-from torch.autograd import Variable
-from torchvision.utils import save_image
-
-from model import Autoencoder
+from model import Autoencoder3D
 
 
-# Loading and Transforming data
-transform = transforms.Compose([transforms.ToTensor(),
-                                transforms.Normalize((0.4914, 0.4822, 0.4466),
-                                                     (0.247, 0.243, 0.261))])
-trainTransform  = tv.transforms.Compose([tv.transforms.ToTensor(),
-                                         tv.transforms.Normalize((0.4914, 0.4822, 0.4466),
-                                                                 (0.247, 0.243, 0.261))])
+# Create data generation function
+def gen_3d_sample(c1=10, c2=2, c3=7, size=(48,56,48)):
+    # Create incrementing point grids
+    xx, yy, zz = np.meshgrid(np.arange(0, size[0], 1, dtype='float64'),
+                             np.arange(0, size[1], 1, dtype='float64'),
+                             np.arange(0, size[2], 1, dtype='float64'))
+    # Apply some slightly-random transform along each axis
+    xx += np.random.randint(c1)/(c2 + c3*np.random.random())
+    yy /= (np.random.randint(c2) + 1)/(c3 + c1*np.random.random())
+    zz *= (np.random.randint(c3) + 1)/(c1 + c2*np.random.random())
 
-trainset = tv.datasets.CIFAR10(root='../data',  train=True,
-                               download=True, transform=transform)
-dataloader = torch.utils.data.DataLoader(trainset, batch_size=32,
-                                         shuffle=False, num_workers=4)
+    # Sum all the independent axis functions
+    xyz = (xx+yy+zz)
 
-testset = tv.datasets.CIFAR10(root='../data', train=False,
-                              download=True, transform=transform)
-classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog',
-           'frog', 'horse', 'ship', 'truck')
-testloader = torch.utils.data.DataLoader(testset, batch_size=4,
-                                         shuffle=False, num_workers=2)
+    # Return the sin of these combined functions in the shape (1, X1, X2, X3)
+    return torch.tensor(np.sin(xyz)).view((1), *size)
 
+# Set epochs, batch size, and N samples
 num_epochs = 5
-batch_size = 128
+batch_size = 16
+training_samples = 500
+data_shape = (48, 56, 48)
 
-model = Autoencoder().cpu()
+# Generate training data
+training_data = []
+for _ in range(0, training_samples+batch_size, batch_size):
+    t_samples = tuple(gen_3d_sample() for idx in range(batch_size))
+    t_samples = torch.cat(t_samples, 0)
+    t_samples = t_samples.view((batch_size), (1), *data_shape)
+
+    training_data += [t_samples]
+
+# Initialize model, loss function and optimizer
+model = Autoencoder3D().cpu()
 distance = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-5)
 
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimage
-import numpy as np
-
-def imshow(img, output):
-    img = img.data.numpy()[0].T
-    output = output.data.numpy()[0].T
-
-    plt.subplot(1,3,1)
-    plt.imshow(img)
-    plt.subplot(1,3,2)
-    plt.imshow(output)
-    plt.subplot(1,3,3)
-    plt.imshow(np.abs(img-output))
-    plt.show()
-
+# Perform training
 for epoch in range(num_epochs):
-    for data in dataloader:
-        img, _  = data
-        img = Variable(img).cpu()
+    for data in training_data:
+        img = data
+        img = img.type('torch.FloatTensor').cpu()
         # forward
         output = model(img)
         loss = distance(output, img)
@@ -67,9 +59,5 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
 
-    # log
-    imshow(img, output)
     print('epoch [{}/{}], loss:{:.4f}'.format(epoch+1, num_epochs, loss.data))
-
-
 
