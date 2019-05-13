@@ -27,6 +27,8 @@ def gen_3d_sample(c1=10, c2=2, c3=7, size=(48,56,48)):
     return torch.tensor(np.sin(xyz)).view((1), *size)
 
 # Set epochs, batch size, and N samples
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 num_epochs = 5
 batch_size = 16
 training_samples = 1000
@@ -42,7 +44,7 @@ for _ in range(0, training_samples+batch_size, batch_size):
     training_data += [t_samples]
 
 # Initialize model, loss function and optimizer
-model = Autoencoder3D().cpu()
+model = Autoencoder3D().to(device)
 distance = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-5)
 
@@ -56,7 +58,7 @@ for epoch in range(num_epochs):
         else:
             print(", {0}".format(idx + 1), end='', flush=True)
         img = data
-        img = img.type('torch.FloatTensor').cpu()
+        img = img.type('torch.FloatTensor').to(device)
         # forward
         output = model(img)
         loss = distance(output, img)
