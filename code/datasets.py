@@ -70,10 +70,12 @@ class ImageDataset(Dataset):
         N = len(files)
         assert(N > 0)
 
-        subset = {"train": slice(0, np.floor(train_size*N)),
-                  "test": slice(np.floor(train_size*N),
-                                np.floor((train_size+test_size)*N)),
-                  "validate": slice(np.floor((train_size+test_size)*N), N)}
+        subset = {"train": slice(0,
+                                 int(np.floor(train_size*N))),
+                  "test": slice(int(np.floor(train_size*N)),
+                                int(np.floor((train_size+test_size)*N))),
+                  "validate": slice(int(np.floor((train_size+test_size)*N)),
+                                    N)}
         print(subset)
         relevant_files = files[subset[mode]]
 
@@ -94,5 +96,5 @@ class ImageDataset(Dataset):
     def __getitem__(self, idx):
         fname = self.data[idx]
         sample = nib.load(fname).get_data().copy()
-        sample = torch.tensor(sample).view((1), *self.shape)
+        sample = torch.tensor(sample).view((1), *sample.shape)
         return sample
