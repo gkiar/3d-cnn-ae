@@ -1,0 +1,12 @@
+#!/bin/bash 
+
+#SBATCH --nodes=1                           # 1 node
+#SBATCH --cpus-per-task=2                   # 2 CPUs
+#SBATCH --time=02:00:00                     # 2 hours
+#SBATCH --error=logs/gkiar.slurm.%J.err     # Error log path  **make dir first
+#SBATCH --output=logs/gkiar.slurm.%J.out    # Output log path  **make dir first
+#SBATCH --gres=gpu:2                        # 1 GPU
+
+
+source /home/users/gkiar/ace_mount/ace_home/code/gkiar/3d-cnn-ae/env/cnn/bin/activate
+python -c "import torch; print(torch.cuda.device_count())"

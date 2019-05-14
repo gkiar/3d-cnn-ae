@@ -17,17 +17,25 @@ from datasets import SimulationDataset # , ImageDataset
 
 def simulate(*args, **kwargs):
     data_shape = (48, 56, 48)
-    training_samples = 500
+    training_samples = 900
     batch_size = 25
     training = SimulationDataset(shape=data_shape, n_samples=training_samples)
     training_loader = DataLoader(training, batch_size=batch_size)
     train(training_loader)
 
 
+def launch(*args, **kwargs):
+    batch_size = 25
+    training = ImageDataset("~/ace_mount/ace_home/data/nv_filtered/",
+                            mode="train")
+    training_loader = DataLoader(training, batch_size=batch_size)
+    train(training_loader)
+
+
 def train(dataset):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
     print(device)
+
     # Initialize model, loss function and optimizer
     model = Autoencoder3D().to(device)
     distance = nn.MSELoss()
@@ -36,8 +44,6 @@ def train(dataset):
     # Perform training
     num_epochs = 25
     for epoch in range(num_epochs):
-        print("Training sample (of {0}): ".format(len(dataset)),
-              end='', flush=True)
         for idx, data in enumerate(dataset):
             if idx == 0:
                 print(idx+1, end='', flush=True)
@@ -79,6 +85,9 @@ def main(args=None):
 
     parser_sim = subparsers.add_parser("simulate")
     parser_sim.set_defaults(func=simulate)
+
+    parser_sim = subparsers.add_parser("launch")
+    parser_sim.set_defaults(func=launch)
 
     inps = parser.parse_args(args) if args is not None else parser.parse_args()
 
