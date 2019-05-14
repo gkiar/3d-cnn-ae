@@ -7,55 +7,34 @@ import torchvision as tv
 import torchvision.transforms as transforms
 import torch.nn as nn
 import numpy as np
+from torch.utils.data import DataLoader
 
 import sys
 
 from model import Autoencoder3D
+from datasets import SimulationDataset # , ImageDataset
+
 
 def simulate(*args, **kwargs):
-    # Create data generation function
-    def gen_3d_sample(c1=10, c2=2, c3=7, size=(48,56,48)):
-        # Create incrementing point grids
-        xx, yy, zz = np.meshgrid(np.arange(0, size[0], 1, dtype='float64'),
-                                 np.arange(0, size[1], 1, dtype='float64'),
-                                 np.arange(0, size[2], 1, dtype='float64'))
-        # Apply some slightly-random transform along each axis
-        xx += np.random.randint(c1)/(c2 + c3*np.random.random())
-        yy /= (np.random.randint(c2) + 1)/(c3 + c1*np.random.random())
-        zz *= (np.random.randint(c3) + 1)/(c1 + c2*np.random.random())
-
-        # Sum all the independent axis functions
-        xyz = (xx+yy+zz)
-
-        # Return the sin of these combined functions in the shape (1,X1,X2,X3)
-        return torch.tensor(np.sin(xyz)).view((1), *size)
-
-    batch_size = 16
-    training_samples = 1000
     data_shape = (48, 56, 48)
-
-    # Generate training data
-    training_data = []
-    for _ in range(0, training_samples + batch_size, batch_size):
-        t_samples = tuple(gen_3d_sample() for idx in range(batch_size))
-        t_samples = torch.cat(t_samples, 0)
-        t_samples = t_samples.view((batch_size), (1), *data_shape)
-
-        training_data += [t_samples]
-
-    train(training_data)
+    training_samples = 500
+    batch_size = 25
+    training = SimulationDataset(shape=data_shape, n_samples=training_samples)
+    training_loader = DataLoader(training, batch_size=batch_size)
+    train(training_loader)
 
 
 def train(dataset):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+    print(device)
     # Initialize model, loss function and optimizer
     model = Autoencoder3D().to(device)
     distance = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-5)
 
     # Perform training
-    num_epochs = 5
+    num_epochs = 25
     for epoch in range(num_epochs):
         print("Training sample (of {0}): ".format(len(dataset)),
               end='', flush=True)
