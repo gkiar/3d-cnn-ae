@@ -7,6 +7,7 @@ import nibabel as nib
 
 import os.path as op
 from glob import glob
+import json
 
 
 class SimulationDataset(Dataset):
@@ -52,19 +53,60 @@ class SimulationDataset(Dataset):
 
 class ImageDataset(Dataset):
     def __init__(self, dataset_directory, random_seed=42, mode="train",
-                 train_size=0.8, test_size=0.1, validate_size=0.1):
+                 train_size=0.8, test_size=0.1, validate_size=0.1,
+                 cache=True, stratify=None):
         # Makes sure that train-test-validate split makes sense
         assert(train_size + test_size + validate_size == 1.0)
         # Makes sure that we're grabbing a valid subset of our dataset
         assert(mode in ["train", "test", "validate"])
 
-        # Get all nifti files in directory
-        files = glob(op.join(dataset_directory, "*", "*.nii*"),
-                     recursive=True)
+        # Get all nifti files in directory, or grab list if you've
+        # already built it (since a big glob can be slow)
+        print("... Getting file list")
+        cached_filelist = op.join(op.expanduser('~'), '.nv_cnn_filelist.txt')
+        if not op.isfile(cached_filelist) or not cache:
+            files = glob(op.join(dataset_directory, "*", "*.nii*"),
+                         recursive=True)
+            with open(cached_filelist, 'w') as fhandle:
+                fhandle.write("\n".join(f for f in files))
+        else:
+            print("... ... Using cached list!")
+            with open(cached_filelist, 'r') as fhandle:
+                files = fhandle.read().split("\n")
+        self.ids = [str(f.split('/')[-2]) for f in files]
 
-        # randomly permute files (according to seed)
-        np.random.seed(random_seed)
-        files = np.random.permutation(files)
+        # Get associated metadata from either generic metadata file
+        # or cached and pruned copy
+        cached_metadata = op.join(op.expanduser('~'), ".nv_cnn_summary.json")
+        print("... Loading map metadata")
+        if not op.isfile(cached_metadata) or not cache:
+            summary_file = op.join(dataset_directory, "summary.json")
+            with open(summary_file, 'r') as fhandle:
+                tmpsummary = json.load(fhandle)
+                self.summary = {}
+                for item in tmpsummary:
+                    if item["id"] in self.ids:
+                        self.summary[str(item["id"])] = item
+                del tmpsummary
+            with open(cached_metadata, 'w') as fhandle:
+                fhandle.write(json.dumps(self.summary))
+        else:
+            print("... ... Using cached metadata!")
+            with open(cached_metadata, 'r') as fhandle:
+                self.summary = json.load(fhandle)
+
+        # Reorganize samples according to either statified classes or
+        # random permutation
+        if isinstance(stratify, list):
+            df = pd.DataFrame.from_dict(self.summary, orient="index")
+            assert(all(s in df.columns for s in stratify))
+            df = df.drop(columns=list(set(df.columns) - set(stratify)))
+            # TODO: set weights based on stratification
+            # TODO: re-sample rows with weights
+            # TODO: generate file list from re-sorted rows
+        else:
+            np.random.seed(random_seed)
+            files = np.random.permutation(files)
 
         # grab first train_size if doing train, next if doing test, etc.
         N = len(files)
