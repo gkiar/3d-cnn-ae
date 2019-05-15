@@ -25,7 +25,7 @@ def simulate(*args, **kwargs):
 
 
 def launch(*args, **kwargs):
-    batch_size = 26
+    batch_size = 16
     training = ImageDataset("/home/users/gkiar/ace_mount/ace_home/data/nv_filtered/",
                             mode="train")
     training_loader = DataLoader(training, batch_size=batch_size)
@@ -56,7 +56,7 @@ def train(dataset):
             loss.backward()
             optimizer.step()
             if not (idx % 100):
-                print(idx, loss.data)
+                print(idx, loss.data, flush=True)
         print('')
         print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1,
                                                   num_epochs, loss.data))
@@ -66,6 +66,8 @@ def train(dataset):
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss,
             }, '{0}_epoch_{1}'.format(outfname, epoch + 1))
+        if device.type == 'cuda':
+            torch.cuda.empty_cache()
 
     torch.save(model, outfname)
 

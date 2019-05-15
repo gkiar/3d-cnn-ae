@@ -76,7 +76,6 @@ class ImageDataset(Dataset):
                                 int(np.floor((train_size+test_size)*N))),
                   "validate": slice(int(np.floor((train_size+test_size)*N)),
                                     N)}
-        print(subset)
         relevant_files = files[subset[mode]]
 
         # print N samples in each group
