@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 import sys
 
 from model import Autoencoder3D
-from datasets import SimulationDataset # , ImageDataset
+from datasets import SimulationDataset, ImageDataset
 
 
 def simulate(*args, **kwargs):
@@ -25,8 +25,8 @@ def simulate(*args, **kwargs):
 
 
 def launch(*args, **kwargs):
-    batch_size = 25
-    training = ImageDataset("~/ace_mount/ace_home/data/nv_filtered/",
+    batch_size = 26
+    training = ImageDataset("/home/users/gkiar/ace_mount/ace_home/data/nv_filtered/",
                             mode="train")
     training_loader = DataLoader(training, batch_size=batch_size)
     train(training_loader)
@@ -39,16 +39,13 @@ def train(dataset):
     # Initialize model, loss function and optimizer
     model = Autoencoder3D().to(device)
     distance = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
     # Perform training
     num_epochs = 25
+    outfname = './nv_params'  # simulation
     for epoch in range(num_epochs):
         for idx, data in enumerate(dataset):
-            if idx == 0:
-                print(idx+1, end='', flush=True)
-            else:
-                print(", {0}".format(idx + 1), end='', flush=True)
             img = data
             img = img.type('torch.FloatTensor').to(device)
             # forward
@@ -58,6 +55,8 @@ def train(dataset):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            if not (idx % 100):
+                print(idx, loss.data)
         print('')
         print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1,
                                                   num_epochs, loss.data))
@@ -66,9 +65,9 @@ def train(dataset):
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss,
-            }, './simulation_{0}'.format(epoch + 1))
+            }, '{0}_epoch_{1}'.format(outfname, epoch + 1))
 
-    torch.save(model, './simulated_model')
+    torch.save(model, outfname)
 
 
 def main(args=None):

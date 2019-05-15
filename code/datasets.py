@@ -95,6 +95,7 @@ class ImageDataset(Dataset):
 
     def __getitem__(self, idx):
         fname = self.data[idx]
-        sample = nib.load(fname).get_data().copy()
+        sample = nib.load(fname).get_data().copy().astype(float)
+        sample = np.nan_to_num(sample)
         sample = torch.tensor(sample).view((1), *sample.shape)
         return sample
