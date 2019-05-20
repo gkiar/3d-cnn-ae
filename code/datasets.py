@@ -120,7 +120,6 @@ class ImageDataset(Dataset):
             np.random.seed(random_seed)
             files = list(np.random.permutation(files))
 
-        import pdb; pdb.set_trace()
         # grab first train_size if doing train, next if doing test, etc.
         N = len(files)
         assert(N > 0)

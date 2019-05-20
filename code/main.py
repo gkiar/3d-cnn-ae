@@ -21,18 +21,18 @@ def simulate(*args, **kwargs):
     batch_size = 25
     training = SimulationDataset(shape=data_shape, n_samples=training_samples)
     training_loader = DataLoader(training, batch_size=batch_size)
-    train(training_loader)
+    _trainer(training_loader)
 
 
-def launch(*args, **kwargs):
+def train(*args, **kwargs):
     batch_size = 16
     training = ImageDataset("/home/users/gkiar/ace_mount/ace_home/data/nv_filtered/",
-                            mode="train")
+                            mode="train", stratify=["map_type", "analysis_level"])
     training_loader = DataLoader(training, batch_size=batch_size)
-    train(training_loader)
+    _trainer(training_loader)
 
 
-def train(dataset):
+def _trainer(dataset):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
 
@@ -76,10 +76,10 @@ def main(args=None):
     description = "Launcher for 3D CNN-AE network to be used on 4mm fMRI SPMs."
     parser = ArgumentParser(__file__, description=description)
 
-    htext = ("simulate: Trains network on simuluated dataset. Mostly intended "
-             "to ensure successful execution of model.\n"
-             "launch: Trains network on real dataset. Will save out weights "
-             "incrementally and terminally, to help debugging model fit.\n"
+    htext = ("simulate: Trains network on simuluated dataset. Intended to test "
+             "successful construction and execution of model.\n"
+             "train: Trains network on real dataset. Will save out weights "
+             "incrementally and terminally.\n"
              "visualize: Creates a figure from the model. To be implemented.")
     subparsers = parser.add_subparsers(dest="mode",
                                        help=htext)
@@ -87,8 +87,8 @@ def main(args=None):
     parser_sim = subparsers.add_parser("simulate")
     parser_sim.set_defaults(func=simulate)
 
-    parser_sim = subparsers.add_parser("launch")
-    parser_sim.set_defaults(func=launch)
+    parser_trn = subparsers.add_parser("train")
+    parser_trn.set_defaults(func=train)
 
     inps = parser.parse_args(args) if args is not None else parser.parse_args()
 
