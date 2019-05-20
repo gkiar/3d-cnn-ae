@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 from torch.utils.data import Dataset
-import torch
-import numpy as np
-import nibabel as nib
-
-import os.path as op
 from glob import glob
+import os.path as op
+import nibabel as nib
+import pandas as pd
+import numpy as np
+import torch
 import json
 
 
@@ -65,15 +65,15 @@ class ImageDataset(Dataset):
         print("... Getting file list")
         cached_filelist = op.join(op.expanduser('~'), '.nv_cnn_filelist.txt')
         if not op.isfile(cached_filelist) or not cache:
-            files = glob(op.join(dataset_directory, "*", "*.nii*"),
-                         recursive=True)
+            files = sorted(glob(op.join(dataset_directory, "*", "*.nii*"),
+                                recursive=True))
             with open(cached_filelist, 'w') as fhandle:
                 fhandle.write("\n".join(f for f in files))
         else:
             print("... ... Using cached list!")
             with open(cached_filelist, 'r') as fhandle:
-                files = fhandle.read().split("\n")
-        self.ids = [str(f.split('/')[-2]) for f in files]
+                files = sorted(fhandle.read().split("\n"))
+        self.ids = {str(f.split('/')[-2]) : f for f in files}
 
         # Get associated metadata from either generic metadata file
         # or cached and pruned copy
@@ -85,8 +85,10 @@ class ImageDataset(Dataset):
                 tmpsummary = json.load(fhandle)
                 self.summary = {}
                 for item in tmpsummary:
-                    if item["id"] in self.ids:
-                        self.summary[str(item["id"])] = item
+                    if str(item["id"]) in self.ids.keys():
+                        l = str(item["id"])
+                        self.summary[l] = item
+                        self.summary[l]["localfile"] = self.ids[l]
                 del tmpsummary
             with open(cached_metadata, 'w') as fhandle:
                 fhandle.write(json.dumps(self.summary))
@@ -100,14 +102,25 @@ class ImageDataset(Dataset):
         if isinstance(stratify, list):
             df = pd.DataFrame.from_dict(self.summary, orient="index")
             assert(all(s in df.columns for s in stratify))
-            df = df.drop(columns=list(set(df.columns) - set(stratify)))
-            # TODO: set weights based on stratification
-            # TODO: re-sample rows with weights
-            # TODO: generate file list from re-sorted rows
+            cols = list(set(df.columns) - set(stratify) - set(["localfile"]))
+            df = df.drop(columns=cols)
+            df = df.fillna(value="unknown")
+
+            grps = df.groupby(stratify)
+            weight_df = pd.DataFrame(columns=['weight'])
+            for grp, rows in grps:
+                for r in rows.index:
+                    weight_df.loc[r] = np.log(len(rows.index)+1)
+            df = pd.concat([df, weight_df], axis="columns", sort=True)
+
+            resampled_df = df.sample(frac=1, replace=False, weights="weight",
+                                     random_state=random_seed, axis=0)
+            files = list(resampled_df["localfile"])
         else:
             np.random.seed(random_seed)
-            files = np.random.permutation(files)
+            files = list(np.random.permutation(files))
 
+        import pdb; pdb.set_trace()
         # grab first train_size if doing train, next if doing test, etc.
         N = len(files)
         assert(N > 0)
