@@ -11,4 +11,4 @@
 source /home/users/gkiar/ace_mount/ace_home/code/gkiar/3d-cnn-ae/env/cnn/bin/activate
 
 cd /home/users/gkiar/ace_mount/ace_home/code/gkiar/3d-cnn-ae/deployment/
-python /home/users/gkiar/ace_mount/ace_home/code/gkiar/3d-cnn-ae/code/main.py launch
+python /home/users/gkiar/ace_mount/ace_home/code/gkiar/3d-cnn-ae/code/main.py train
