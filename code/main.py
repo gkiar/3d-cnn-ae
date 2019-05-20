@@ -39,7 +39,7 @@ def _trainer(dataset):
     # Initialize model, loss function and optimizer
     model = Autoencoder3D().to(device)
     distance = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
     # Perform training
     num_epochs = 25
