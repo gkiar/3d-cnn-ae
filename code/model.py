@@ -75,9 +75,8 @@ class Autoencoder3D(nn.Module):
         # N.B. Cannot use MaxUnpool3d here because this pooling was done with 32
         # filters and unpooling is attempted with 1 filter.
         # TODO: consider this implication on all other unpooling steps.
-        # self.unpool3 = nn.Upsample(scale_factor=2)
-
-        self.unpool3 = nn.MaxUnpool3d(2, stride=2)
+        self.unpool3 = nn.Upsample(scale_factor=2)
+        # self.unpool3 = nn.MaxUnpool3d(2, stride=2)
 
         # Layer input image size: 32x12x14x12 ; Kernel size: 5
         # N channels in: 1 ; N channels out: 32 ;  Stride: 1
@@ -132,8 +131,8 @@ class Autoencoder3D(nn.Module):
         ind1, ind2, ind3 = indices
         x = self.deconv4(x)
         x = self.relu(x)
-        # x = self.unpool3(x, ind3)  # TODO: see note on :76
-        x = self.unpool3(x, ind3)
+        x = self.unpool3(x)  # TODO: see note on :76
+        # x = self.unpool3(x, ind3)
         x = self.deconv3(x)
         x = self.relu(x)
         x = self.unpool2(x, ind2)
