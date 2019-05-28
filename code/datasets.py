@@ -36,6 +36,11 @@ class SimulationDataset(Dataset):
         yy /= (np.random.randint(c2) + 1)/(c3 + c1*np.random.random())
         zz *= (np.random.randint(c3) + 1)/(c1 + c2*np.random.random())
 
+        # FOR DEBUGGING: Make data very predictable
+        # xx += c1/(c2 + c3*np.random.random())
+        # yy /= (c2 + 1)/(c3 + c1*np.random.random())
+        # zz *= (c3 + 1)/(c1 + c2*np.random.random())
+
         # Sum all the independent axis functions
         xyz = (xx+yy+zz)
 

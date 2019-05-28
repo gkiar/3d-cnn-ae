@@ -9,32 +9,35 @@ import torch.nn as nn
 import numpy as np
 from torch.utils.data import DataLoader
 
+import os.path as op
 import sys
+import os
 
 from model import Autoencoder3D
 from datasets import SimulationDataset, ImageDataset
 
 
-def simulate(*args, **kwargs):
+def simulate(outdir, samples, batch_size, epochs, **kwargs):
     data_shape = (48, 56, 48)
-    training_samples = 900
-    batch_size = 25
-    training = SimulationDataset(shape=data_shape, n_samples=training_samples)
+    training = SimulationDataset(shape=data_shape, n_samples=samples)
     training_loader = DataLoader(training, batch_size=batch_size)
-    _trainer(training_loader)
+    _trainer(training_loader, outdir, epochs)
 
 
-def train(*args, **kwargs):
+def train(indir, outdir, batch_size, epochs, device_id, **kwargs):
     batch_size = 16
-    training = ImageDataset("/home/users/gkiar/ace_mount/ace_home/data/nv_filtered/",
-                            mode="train", stratify=["map_type", "analysis_level"])
+    indir="/home/users/gkiar/ace_mount/ace_home/data/nv_filtered/"
+    training = ImageDataset(indir, mode="train",
+                            stratify=["map_type", "analysis_level"])
     training_loader = DataLoader(training, batch_size=batch_size)
-    _trainer(training_loader)
+    _trainer(training_loader, outdir, device_id)
 
 
-def _trainer(dataset):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(device)
+def _trainer(dataset, outdir, epochs, device_id=0):
+    if torch.cuda.is_available():
+        device = torch.device("cuda:{0}".format(device_id))
+    else:
+        device = "cpu"
 
     # Initialize model, loss function and optimizer
     model = Autoencoder3D().to(device)
@@ -42,9 +45,11 @@ def _trainer(dataset):
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
     # Perform training
-    num_epochs = 25
-    outfname = './nv_params'  # simulation
-    for epoch in range(num_epochs):
+    if not op.isdir(outdir):
+        os.system("mkdir -p {0}".format(outdir))
+
+    outfname = op.join(outdir, 'model')
+    for epoch in range(epochs):
         for idx, data in enumerate(dataset):
             img = data
             img = img.type('torch.FloatTensor').to(device)
@@ -59,17 +64,17 @@ def _trainer(dataset):
                 print(idx, loss.data, flush=True)
         print('')
         print('epoch [{}/{}], loss:{:.4f}'.format(epoch + 1,
-                                                  num_epochs, loss.data))
+                                                  epochs, loss.data))
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss,
-            }, '{0}_epoch_{1}'.format(outfname, epoch + 1))
+            }, '{0}_epoch_{1}.pt'.format(outfname, epoch + 1))
         if device.type == 'cuda':
             torch.cuda.empty_cache()
 
-    torch.save(model, outfname)
+    torch.save(model,  "{0}_final.pt".format(outfname))
 
 
 def main(args=None):
@@ -85,9 +90,24 @@ def main(args=None):
                                        help=htext)
 
     parser_sim = subparsers.add_parser("simulate")
+    parser_sim.add_argument("outdir")
+    parser_sim.add_argument("--samples", "-s", action="store", type=int,
+                            default=800)
+    parser_sim.add_argument("--batch_size", "-b", action="store", type=int,
+                            default=32)
+    parser_sim.add_argument("--epochs", "-e", action="store", type=int,
+                            default=50)
     parser_sim.set_defaults(func=simulate)
 
     parser_trn = subparsers.add_parser("train")
+    parser_trn.add_argument("indir")
+    parser_trn.add_argument("outdir")
+    parser_trn.add_argument("--batch_size", "-b", action="store", type=int,
+                            default=32)
+    parser_trn.add_argument("--epochs", "-e", action="store", type=int,
+                            default=50)
+    parser_trn.add_argument("--device_id", "-d", action="store", type=int,
+                            default=0)
     parser_trn.set_defaults(func=train)
 
     inps = parser.parse_args(args) if args is not None else parser.parse_args()
