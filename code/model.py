@@ -14,6 +14,7 @@ class Autoencoder3D(nn.Module):
         # Create memoryless-blocks for reuse
         self.relu = nn.ReLU(True)
         self.sigm = nn.Sigmoid()
+        self.tanh = nn.Softsign()
 
         ########
         #
@@ -140,8 +141,15 @@ class Autoencoder3D(nn.Module):
         x = self.relu(x)
         x = self.unpool1(x, ind1)
         x = self.deconv1(x)
-        x = self.relu(x)
-        x = self.sigm(x)
+
+        # N.B: don't relu at the last layer, bc weights cannot correct inversion
+        # Forces to be positive
+        # x = self.relu(x)
+
+        # Rescales from 0-1?
+        # x = self.sigm(x)
+
+        x = self.tanh(x)
         return x
 
     ########
