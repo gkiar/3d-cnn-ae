@@ -14,7 +14,7 @@ class SimulationDataset(Dataset):
     def __init__(self,
                  shape=(48, 56, 48),
                  n_samples=1000,
-                 constants=(10, 3, 16)):
+                 constants=(90, 4, 87)):
         """
         Args:
             shape (tuple): 3D shape of simulated data
@@ -32,14 +32,14 @@ class SimulationDataset(Dataset):
                                  np.arange(0, shape[1], 1, dtype='float64'),
                                  np.arange(0, shape[2], 1, dtype='float64'))
         # Apply some slightly-random transform along each axis
-        xx += np.random.randint(c1)/(c2 + c3*np.random.random())
-        yy /= (np.random.randint(c2) + 1)/(c3 + c1*np.random.random())
-        zz *= (np.random.randint(c3) + 1)/(c1 + c2*np.random.random())
+        # xx += np.random.randint(c1)/(c2 + c3*np.random.random())
+        # yy /= (np.random.randint(c2) + 1)/(c3 + c1*np.random.random())
+        # zz *= (np.random.randint(c3) + 1)/(c1 + c2*np.random.random())
 
         # FOR DEBUGGING: Make data very predictable
-        # xx += c1/(c2 + c3*np.random.random())
-        # yy /= (c2 + 1)/(c3 + c1*np.random.random())
-        # zz *= (c3 + 1)/(c1 + c2*np.random.random())
+        xx += c1/(c2 + c3*np.random.random())
+        yy /= (c2 + 1)/(c3 + c1*np.random.random())
+        zz *= (c3 + 1)/(c1 + c2*np.random.random())
 
         # Sum all the independent axis functions
         xyz = (xx+yy+zz)
