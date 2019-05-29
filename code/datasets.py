@@ -155,5 +155,6 @@ class ImageDataset(Dataset):
         fname = self.data[idx]
         sample = nib.load(fname).get_data().copy().astype(float)
         sample = np.nan_to_num(sample)
+        sample *= 1.0/np.abs(sample).max()
         sample = torch.tensor(sample).view((1), *sample.shape)
         return sample
