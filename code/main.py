@@ -25,12 +25,10 @@ def simulate(outdir, samples, batch_size, epochs, **kwargs):
 
 
 def train(indir, outdir, batch_size, epochs, device_id, **kwargs):
-    batch_size = 16
-    indir="/home/users/gkiar/ace_mount/ace_home/data/nv_filtered/"
     training = ImageDataset(indir, mode="train",
                             stratify=["map_type", "analysis_level"])
     training_loader = DataLoader(training, batch_size=batch_size)
-    _trainer(training_loader, outdir, device_id)
+    _trainer(training_loader, outdir, epochs, device_id)
 
 
 def _trainer(dataset, outdir, epochs, device_id=0):

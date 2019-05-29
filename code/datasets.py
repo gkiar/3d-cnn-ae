@@ -58,7 +58,7 @@ class SimulationDataset(Dataset):
 
 class ImageDataset(Dataset):
     def __init__(self, dataset_directory, random_seed=42, mode="train",
-                 train_size=0.8, test_size=0.1, validate_size=0.1,
+                 train_size=0.9, test_size=0.09, validate_size=0.01,
                  cache=True, stratify=None):
         # Makes sure that train-test-validate split makes sense
         assert(train_size + test_size + validate_size == 1.0)
