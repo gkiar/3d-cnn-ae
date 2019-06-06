@@ -13,7 +13,6 @@ class Autoencoder3D(nn.Module):
 
         # Create memoryless-blocks for reuse
         self.relu = nn.ReLU(True)
-        self.sigm = nn.Sigmoid()
         self.tanh = nn.Softsign()
 
         ########
@@ -71,13 +70,7 @@ class Autoencoder3D(nn.Module):
         # Layer input image size: 32x6x7x6 ; Kernel size: 2
         # N channels in: 1 ; N channels out: 1 ;  Stride: 2
         # Layer output image size: 32x12x14x12 ; Pad: 0
-        #self.unpool3 = nn.MaxUnpool3d(2, stride=2)
-
-        # N.B. Cannot use MaxUnpool3d here because this pooling was done with 32
-        # filters and unpooling is attempted with 1 filter.
-        # TODO: consider this implication on all other unpooling steps.
         self.unpool3 = nn.Upsample(scale_factor=2)
-        # self.unpool3 = nn.MaxUnpool3d(2, stride=2)
 
         # Layer input image size: 32x12x14x12 ; Kernel size: 5
         # N channels in: 1 ; N channels out: 32 ;  Stride: 1
@@ -97,7 +90,8 @@ class Autoencoder3D(nn.Module):
         # Layer input image size: 32x24x28x24 ; Kernel size: 2
         # N channels in: 32 ; N channels out: 32 ;  Stride: 2
         # Layer output image size: 32x48x56x48 ; Pad: 0
-        self.unpool1 = nn.MaxUnpool3d(2, stride=2)
+        self.unpool1 = nn.Upsample(scale_factor=2, mode="trilinear")
+        # self.unpool1 = nn.MaxUnpool3d(2, stride=2)
 
         # Layer input image size: 32x48x56x48 ; Kernel size: 1
         # N channels in: 32 ; N channels out: 1 ;  Stride: 1
@@ -132,23 +126,16 @@ class Autoencoder3D(nn.Module):
         ind1, ind2, ind3 = indices
         x = self.deconv4(x)
         x = self.relu(x)
-        x = self.unpool3(x)  # TODO: see note on :76
+        x = self.unpool3(x)
         # x = self.unpool3(x, ind3)
         x = self.deconv3(x)
         x = self.relu(x)
         x = self.unpool2(x, ind2)
         x = self.deconv2(x)
         x = self.relu(x)
-        x = self.unpool1(x, ind1)
+        x = self.unpool1(x)
+        # x = self.unpool1(x, ind1)
         x = self.deconv1(x)
-
-        # N.B: don't relu at the last layer, bc weights cannot correct inversion
-        # Forces to be positive
-        # x = self.relu(x)
-
-        # Rescales from 0-1?
-        # x = self.sigm(x)
-
         x = self.tanh(x)
         return x
 
