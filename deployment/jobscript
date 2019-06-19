@@ -2,7 +2,7 @@
 
 #SBATCH --nodes=1                           # 1 node
 #SBATCH --cpus-per-task=4                   # 4 CPUs
-#SBATCH --time=24:00:00                     # 24 hours
+#SBATCH --time=72:00:00                     # 24 hours
 #SBATCH --error=logs/gkiar.slurm.%J.err     # Error log path  **make dir first
 #SBATCH --output=logs/gkiar.slurm.%J.out    # Output log path  **make dir first
 #SBATCH --gres=gpu:1                        # 1 GPU
@@ -10,5 +10,5 @@
 
 source /home/users/gkiar/gitcode/gkiar/3d-cnn-ae/env/cnn/bin/activate
 
-cd /home/users/gkiar/ace_mount/ace_home/code/gkiar/3d-cnn-ae/deployment/
-python /home/users/gkiar/gitcode/gkiar/3d-cnn-ae/code/main.py train /home/users/gkiar/ace_mount/ace_home/data/nv_filtered/ /home/users/gkiar/gitcode/gkiar/3d-cnn-ae/deployment/nv_may29_3_normalized -b 20 -d 0 -e 10000
+cd /home/users/gkiar/gitcode/gkiar/3d-cnn-ae/deployment/
+python /home/users/gkiar/gitcode/gkiar/3d-cnn-ae/code/main.py train /home/users/gkiar/ace_mount/ace_home/data/nv_filtered/ /home/users/gkiar/gitcode/gkiar/3d-cnn-ae/deployment/nv_june18_1_ups -b 20 -d 0 -e 10000
