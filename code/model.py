@@ -98,11 +98,12 @@ class Autoencoder3D(nn.Module):
         # self.unpool1 = nn.MaxUnpool3d(2, stride=2)
         self.unpool1 = nn.Upsample(scale_factor=2, mode='trilinear')
 
-        # Layer input image size: 32x48x56x48 ; Kernel size: 1
+        # Layer input image size: 32x48x56x48 ; Kernel size: 3
         # N channels in: 32 ; N channels out: 1 ;  Stride: 1
-        # Layer output image size: 1x48x56x48 ; Pad: 0
-        # self.deconv1 = nn.ConvTranspose3d(32, 1, kernel_size=1, padding=0)
-        self.deconv1 = nn.Conv3d(32, 1, kernel_size=1, padding=0)
+        # Layer output image size: 1x48x56x48 ; Pad: 1
+        # self.deconv1 = nn.Conv3d(32, 1, kernel_size=1, padding=0)
+        self.deconv1 = nn.ConvTranspose3d(32, 1, kernel_size=3, stride=1,
+                                          padding=1)
 
     ########
     #
