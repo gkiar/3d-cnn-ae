@@ -83,8 +83,8 @@ class Autoencoder3D(nn.Module):
         # Layer input image size: 32x12x14x12 ; Kernel size: 2
         # N channels in: 32 ; N channels out: 32 ;  Stride: 2
         # Layer output image size: 32x24x28x24 ; Pad: 0
-        # self.unpool2 = nn.MaxUnpool3d(2, stride=2)
-        self.unpool2 = nn.Upsample(scale_factor=2, mode='trilinear')
+        self.unpool2 = nn.MaxUnpool3d(2, stride=2)
+        # self.unpool2 = nn.Upsample(scale_factor=2, mode='trilinear')
 
         # Layer input image size: 32x24x28x24 ; Kernel size: 5
         # N channels in: 32 ; N channels out: 32 ;  Stride: 1
@@ -136,8 +136,8 @@ class Autoencoder3D(nn.Module):
         # x = self.unpool3(x, ind3)
         x = self.deconv3(x)
         x = self.relu(x)
-        # x = self.unpool2(x, ind2)
-        x = self.unpool2(x)
+        x = self.unpool2(x, ind2)
+        # x = self.unpool2(x)
         x = self.deconv2(x)
         x = self.relu(x)
         # x = self.unpool1(x, ind1)
