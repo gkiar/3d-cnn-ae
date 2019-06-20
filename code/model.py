@@ -103,8 +103,7 @@ class Autoencoder3D(nn.Module):
         # N channels in: 32 ; N channels out: 1 ;  Stride: 1
         # Layer output image size: 1x48x56x48 ; Pad: 1
         # self.deconv1 = nn.Conv3d(32, 1, kernel_size=1, padding=0)
-        self.deconv1 = nn.ConvTranspose3d(32, 1, kernel_size=3, stride=1,
-                                          padding=1)
+        self.deconv1 = nn.ConvTranspose3d(32, 1, kernel_size=1, stride=1)
 
     ########
     #
