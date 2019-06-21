@@ -67,43 +67,39 @@ class Autoencoder3D(nn.Module):
         # Layer output image size: 32x6x7x6 ; Pad: 1
         self.deconv4 = nn.ConvTranspose3d(32, 32, kernel_size=3, stride=1,
                                           padding=1)
-        # TODO: rename these layers since they're nolong deconvs
-        # self.deconv4 = nn.Conv3d(32, 32, kernel_size=1, padding=0)
 
         # Layer input image size: 32x6x7x6 ; Kernel size: 2
         # N channels in: 1 ; N channels out: 1 ;  Stride: 2
         # Layer output image size: 32x12x14x12 ; Pad: 0
-        self.unpool3 = nn.Upsample(scale_factor=2, mode='trilinear')
-
+        # self.unpool3 = nn.Upsample(scale_factor=2, mode='trilinear')
         # Layer input image size: 32x12x14x12 ; Kernel size: 5
         # N channels in: 1 ; N channels out: 32 ;  Stride: 1
         # Layer output image size: 32x12x14x12 ; Pad: 2
-        self.deconv3 = nn.ConvTranspose3d(32, 32, kernel_size=5, padding=2)
-        # self.deconv3 = nn.Conv3d(32, 32, kernel_size=5, padding=2)
+        self.deconv3 = nn.ConvTranspose3d(32, 32, kernel_size=4, stride=2,
+                                          padding=1)
 
         # Layer input image size: 32x12x14x12 ; Kernel size: 2
         # N channels in: 32 ; N channels out: 32 ;  Stride: 2
         # Layer output image size: 32x24x28x24 ; Pad: 0
-        self.unpool2 = nn.MaxUnpool3d(2, stride=2)
-        # self.unpool2 = nn.Upsample(scale_factor=2, mode='trilinear')
-
+        # self.unpool2 = nn.MaxUnpool3d(2, stride=2)
         # Layer input image size: 32x24x28x24 ; Kernel size: 5
         # N channels in: 32 ; N channels out: 32 ;  Stride: 1
         # Layer output image size: 32x24x28x24 ; Pad: 2
-        self.deconv2 = nn.ConvTranspose3d(32, 32, kernel_size=5, padding=2)
-        # self.deconv2 = nn.Conv3d(32, 32, kernel_size=5, padding=2)
+        self.deconv2 = nn.ConvTranspose3d(32, 32, kernel_size=4, stride=2,
+                                          padding=1)
 
         # Layer input image size: 32x24x28x24 ; Kernel size: 2
         # N channels in: 32 ; N channels out: 32 ;  Stride: 2
         # Layer output image size: 32x48x56x48 ; Pad: 0
-        self.unpool1 = nn.MaxUnpool3d(2, stride=2)
-        # self.unpool1 = nn.Upsample(scale_factor=2, mode='trilinear')
+        # self.unpool1 = nn.MaxUnpool3d(2, stride=2)
+        self.deconv1 = nn.ConvTranspose3d(32, 32, kernel_size=4, stride=2,
+                                          padding=1)
 
-        # Layer input image size: 32x48x56x48 ; Kernel size: 3
+        # Layer input image size: 32x48x56x48 ; Kernel size: 1
         # N channels in: 32 ; N channels out: 1 ;  Stride: 1
-        # Layer output image size: 1x48x56x48 ; Pad: 1
-        # self.deconv1 = nn.Conv3d(32, 1, kernel_size=1, padding=0)
-        self.deconv1 = nn.ConvTranspose3d(32, 1, kernel_size=1, stride=1)
+        # Layer output image size: 1x48x56x48 ; Pad: 0
+        self.deconv0 = nn.ConvTranspose3d(32, 1, kernel_size=1, stride=1,
+                                          padding=0)
 
     ########
     #
