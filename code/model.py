@@ -129,17 +129,18 @@ class Autoencoder3D(nn.Module):
         ind1, ind2, ind3 = indices
         x = self.deconv4(x)
         x = self.relu(x)
-        x = self.unpool3(x)
+        # x = self.unpool3(x)
         # x = self.unpool3(x, ind3)
         x = self.deconv3(x)
         x = self.relu(x)
-        x = self.unpool2(x, ind2)
+        # x = self.unpool2(x, ind2)
         # x = self.unpool2(x)
         x = self.deconv2(x)
         x = self.relu(x)
-        x = self.unpool1(x, ind1)
+        # x = self.unpool1(x, ind1)
         # x = self.unpool1(x)
         x = self.deconv1(x)
+        x = self.deconv0(x)
         x = self.tanh(x)
         return x
 
